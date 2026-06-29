@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>媽媽的每日練習</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; padding: 20px; background-color: #fdf6e3; }
+        #quiz-container { width: 100%; max-width: 500px; text-align: center; }
+        .question { font-size: 28px; margin-bottom: 20px; color: #333; }
+        button { display: block; width: 100%; padding: 20px; margin: 10px 0; font-size: 22px; cursor: pointer; border: none; border-radius: 10px; background-color: #fff; box-shadow: 2px 2px 5px #ccc; }
+        button:active { background-color: #e0e0e0; }
+        #feedback { font-size: 24px; margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="quiz-container">
+    <div class="question" id="question">題目載入中...</div>
+    <div id="options"></div>
+    <div id="feedback"></div>
+</div>
+
+<script>
+    // 您的題庫區塊
+    const questions = [
+        { q: "買一斤蘋果 50 元，兩斤多少錢？", a: ["100元", "80元", "50元"], correct: "100元" },
+        { q: "冰箱裡應該放什麼？", a: ["冷凍肉類", "拖鞋", "報紙"], correct: "冷凍肉類" }
+    ];
+
+    let currentQ = 0;
+
+    function loadQuestion() {
+        const qData = questions[currentQ];
+        document.getElementById('question').innerText = qData.q;
+        const optionsDiv = document.getElementById('options');
+        optionsDiv.innerHTML = '';
+        qData.a.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.innerText = opt;
+            btn.onclick = () => check(opt);
+            optionsDiv.appendChild(btn);
+        });
+    }
+
+    function check(ans) {
+        if(ans === questions[currentQ].correct) {
+            document.getElementById('feedback').innerText = "太棒了，答對了！";
+            setTimeout(() => { 
+                currentQ = (currentQ + 1) % questions.length; 
+                document.getElementById('feedback').innerText = "";
+                loadQuestion(); 
+            }, 1500);
+        } else {
+            document.getElementById('feedback').innerText = "再想一下喔～";
+        }
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>
