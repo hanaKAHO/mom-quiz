@@ -61,27 +61,31 @@
             optionsDiv.appendChild(btn);
         });
     }
-
-    function check(ans) {
-        if(ans === dailyQuestions[currentIdx].correct) {
+function check(ans) {
+        const qData = dailyQuestions[currentIdx];
+        const feedbackDiv = document.getElementById('feedback');
+        
+        if(ans === qData.correct) {
             score += 10;
-            document.getElementById('feedback').style.color = "green";
-            document.getElementById('feedback').innerText = "答對了！";
+            feedbackDiv.style.color = "green";
+            feedbackDiv.innerText = "答對了！太棒了！";
         } else {
-            document.getElementById('feedback').style.color = "red";
-            document.getElementById('feedback').innerText = "再想一下喔～";
+            feedbackDiv.style.color = "red";
+            // 這一行是新增的：告訴她正確答案
+            feedbackDiv.innerText = "再想一下喔～正確答案是：" + qData.correct;
         }
 
         setTimeout(() => {
             currentIdx++;
-            document.getElementById('feedback').innerText = "";
+            feedbackDiv.innerText = "";
             if(currentIdx < 10) {
                 loadQuestion();
             } else {
                 showResult();
             }
-        }, 1000);
+        }, 2000); // 延長到 2 秒，讓媽媽有時間看清楚正確答案
     }
+    
 
     function showResult() {
         document.getElementById('game-area').style.display = 'none';
