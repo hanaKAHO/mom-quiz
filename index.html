@@ -3,17 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>麗香的每日健康闖關</title>
+    <title>麗香的每日健康任務</title>
     <style>
-        body { font-family: sans-serif; background-color: #fffaf0; padding: 15px; text-align: center; color: #333; }
-        .step { display: none; margin-top: 20px; }
-        .active { display: block; }
-        button { width: 90%; padding: 25px; margin: 10px 0; font-size: 24px; border: none; border-radius: 15px; box-shadow: 2px 2px 5px #ccc; cursor: pointer; background: #fff; }
+        body { font-family: sans-serif; background-color: #fffaf0; padding: 20px; text-align: center; color: #333; }
+        .step { display: none; } .active { display: block; }
+        button { width: 95%; padding: 20px; margin: 10px 0; font-size: 24px; border: none; border-radius: 15px; background: #fff; box-shadow: 2px 2px 5px #ccc; }
         .btn-yes { background: #c8e6c9; }
-        .btn-heat { background: #ffcc80; }
-        .btn-cold { background: #81d4fa; }
-        .btn-pain { background: #ef9a9a; }
-        #advice { font-size: 24px; font-weight: bold; color: #b71c1c; margin: 20px; }
+        .btn-heat { background: #ffcc80; } .btn-cold { background: #81d4fa; } .btn-pain { background: #ef9a9a; }
+        #timer { font-size: 50px; font-weight: bold; color: #d32f2f; margin: 20px; }
     </style>
 </head>
 <body>
@@ -24,57 +21,83 @@
 </div>
 
 <div id="step1" class="step">
-    <h2>今天天氣如何呢？</h2>
-    <button class="btn-heat" onclick="setWeather('熱', '天氣熱，多喝水、吹電風扇，穿涼爽點喔！')">覺得熱</button>
-    <button class="btn-cold" onclick="setWeather('冷', '天氣涼，要加件外套，喝溫水暖暖身子喔。')">覺得冷</button>
+    <h2>今天天氣如何？</h2>
+    <button class="btn-heat" onclick="setWeather('熱')">覺得熱</button>
+    <button class="btn-cold" onclick="setWeather('冷')">覺得冷</button>
 </div>
-
 <div id="step2" class="step">
     <h2>今天身體狀況如何？</h2>
-    <button class="btn-pain" onclick="setBody('胃痛', '胃痛時試著深呼吸放鬆，休息一下不要急。')">有點胃痛</button>
-    <button class="btn-pain" onclick="setBody('累', '身體累就閉目養神，不要太操勞。')">覺得累</button>
-    <button class="btn-yes" onclick="setBody('好', '精神很好，太棒了！')">精神很好</button>
+    <button class="btn-pain" onclick="setBody('有點胃痛')">有點胃痛</button>
+    <button class="btn-yes" onclick="setBody('精神很好')">精神很好</button>
 </div>
 
 <div id="step3" class="step">
-    <div id="quiz-area"></div>
+    <h3 id="q-text">題目載入中...</h3>
+    <div id="q-btns"></div>
 </div>
 
 <div id="step4" class="step">
     <h2 id="ex-name"></h2>
-    <button class="btn-yes" onclick="nextExercise()">完成這個動作！</button>
+    <div id="timer">30</div>
+    <button id="next-ex-btn" class="btn-yes" style="display:none" onclick="nextExercise()">完成！進入下一關</button>
 </div>
 
 <div id="step5" class="step">
-    <h2>今天的活動完成了！很棒喔！</h2>
-    <button onclick="location.reload()">重新開始</button>
+    <h2>全部完成了！麗香真棒！</h2>
+    <button onclick="location.reload()">再做一次</button>
 </div>
 
 <script>
-    const exercises = ["兩手插腰身體轉(20次)", "站起來墊腳尖(30次)", "雙手平舉放下(15次)", "原地踏步擺手(1分鐘)", "深呼吸伸展(5次)"];
-    let exIdx = 0, currentStep = 0;
+    // 1. 測驗題庫 (請把您的題目貼到這裡)
+    const questions = [{q:"吃飯前發現手很髒，應該先？", a:["洗手","喝水"], correct:"洗手"}, {q:"買牛奶時，應該先注意什麼？", a:["有效日期","瓶子顏色"], correct:"有效日期"}];
+    let qIdx = 0, score = 0, currentStep = 0, exIdx = 0;
+    const exercises = ["兩手插腰身體左右轉", "站起來墊腳尖", "雙手向前平舉再放下", "原地踏步擺手", "深呼吸伸展雙手"];
 
-    // 初始化日期
+    // 2. 初始化
     const date = new Date();
-    document.getElementById('greeting').innerText = `麗香早安！今天是 ${date.getMonth()+1}月${date.getDate()}日 星期${'日一二三四五六'[date.getDay()]}`;
+    document.getElementById('greeting').innerText = `麗香早安！今天是 ${date.getMonth()+1}月${date.getDate()}日`;
 
     function nextStep(s) {
-        document.getElementById('step'+currentStep).classList.remove('active');
+        document.querySelectorAll('.step').forEach(e => e.classList.remove('active'));
         currentStep = s;
         document.getElementById('step'+currentStep).classList.add('active');
+        if(currentStep === 4) startTimer();
     }
 
-    function setWeather(t, msg) { alert(msg); nextStep(2); }
-    function setBody(t, msg) { alert(msg); loadQuiz(); nextStep(3); }
+    function setWeather(t) { alert(t === '熱' ? '多喝水、吹電風扇！' : '加件外套喔！'); nextStep(2); }
+    function setBody(t) { alert(t === '有點胃痛' ? '試著深呼吸放鬆喔！' : '太棒了！'); loadQuiz(); nextStep(3); }
 
-    function loadQuiz() { /* 這邊接您之前的測驗邏輯 */ document.getElementById('quiz-area').innerHTML = "<h3>[動動腦測驗區] (請將之前的測驗代碼嵌入此處)</h3><button onclick='nextStep(4)'>測驗完成，開始運動！</button>"; }
+    // 3. 測驗邏輯
+    function loadQuiz() {
+        let q = allQuestions[qIdx];
+        document.getElementById('q-text').innerText = q.q;
+        let btnArea = document.getElementById('q-btns');
+        btnArea.innerHTML = '';
+        q.a.forEach(opt => {
+            let b = document.createElement('button');
+            b.innerText = opt;
+            b.onclick = () => { qIdx++; qIdx < 2 ? loadQuiz() : nextStep(4); };
+            btnArea.appendChild(b);
+        });
+    }
+
+    // 4. 運動與計時邏輯
+    function startTimer() {
+        document.getElementById('ex-name').innerText = exercises[exIdx];
+        document.getElementById('next-ex-btn').style.display = 'none';
+        let count = 30;
+        document.getElementById('timer').innerText = count;
+        let t = setInterval(() => {
+            count--;
+            document.getElementById('timer').innerText = count;
+            if(count <= 0) { clearInterval(t); document.getElementById('next-ex-btn').style.display = 'block'; }
+        }, 1000);
+    }
 
     function nextExercise() {
         exIdx++;
-        if(exIdx < exercises.length) document.getElementById('ex-name').innerText = exercises[exIdx];
-        else nextStep(5);
+        exIdx < exercises.length ? startTimer() : nextStep(5);
     }
-    document.getElementById('ex-name').innerText = exercises[0];
 </script>
 </body>
 </html>
