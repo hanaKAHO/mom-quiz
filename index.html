@@ -7,8 +7,8 @@
 <style>
 body{font-family:"Microsoft JhengHei";background:#fffaf0;text-align:center;padding:25px}
 .step{display:none}.active{display:block}
-h1{font-size:48px;white-space:pre-line}
-h2{font-size:40px}
+h1{font-size:40px;white-space:pre-line}
+h2{font-size:32px}
 button{width:90%;padding:30px;margin:15px;font-size:32px;border-radius:25px;border:none}
 .hot{background:#ffe0b2}.cold{background:#b3e5fc}.good{background:#dcedc8}.bad{background:#ffcdd2}
 #answer{font-size:35px}
@@ -38,13 +38,8 @@ button{width:90%;padding:30px;margin:15px;font-size:32px;border-radius:25px;bord
 <div id="quiz-area"></div>
 </div>
 
-<div id="step3_5" class="step">
-<h2>答題完成！🌸</h2>
-<h2 id="score-result"></h2>
-<button onclick="nextStep(4); exerciseStart()">開始運動囉 💪</button>
-</div>
-
 <div id="step4" class="step">
+<h2 id="scoreShow"></h2>
 <h2>動一動時間 🌸</h2>
 <h2 id="exercise"></h2>
 <h1 id="timer"></h1>
@@ -53,6 +48,7 @@ button{width:90%;padding:30px;margin:15px;font-size:32px;border-radius:25px;bord
 
 <div id="step5" class="step">
 <h2>🎉 完成囉！</h2>
+<h2 id="result"></h2>
 <button onclick="location.reload()">明天再玩 ❤️</button>
 </div>
 
@@ -60,74 +56,138 @@ button{width:90%;padding:30px;margin:15px;font-size:32px;border-radius:25px;bord
 let current=0;
 
 function nextStep(n){
-    // 支援字串 ID (如 '3_5')
-    document.getElementById("step"+current).classList.remove("active");
-    current = n;
-    document.getElementById("step"+n).classList.add("active");
+document.getElementById("step"+current).classList.remove("active");
+current=n;
+document.getElementById("step"+n).classList.add("active");
 }
 
-// ... (問候與題目邏輯保持不變) ...
 let d=new Date();
 let week=["星期日","星期一","星期二","星期三","星期四","星期五","星期六"];
-let greeting=`麗香早安 🌸\n今天是 ${d.getMonth()+1}月${d.getDate()}日 ${week[d.getDay()]}`;
-if(d.getDay()==3||d.getDay()==0) greeting+="\n\n今天沒有垃圾車喔 🚛";
-if(d.getDay()==2||d.getDay()==5) greeting+="\n\n今天下午2:30金妹會來喔 😊";
+
+let greeting=麗香早安 🌸
+今天是 ${d.getMonth()+1}月${d.getDate()}日 ${week[d.getDay()]};
+
+if(d.getDay()==3||d.getDay()==0){
+greeting+="\n\n今天沒有垃圾車喔 🚛";
+}
+
+if(d.getDay()==2||d.getDay()==5){
+greeting+="\n\n今天下午2:30金妹會來喔 😊";
+}
+
 document.getElementById("greeting").innerText=greeting;
 
-function weather(x){alert(x=="hot"?"☀️ 多喝水喔 💧":"❄️ 穿暖一點喔 🧥"); nextStep(1); /* 這裡改為 nextStep(2) 如果希望直接跳過去 */}
-function bodyFeel(x){ if(x=="stomach")alert("🤢 先休息一下"); if(x=="dizzy")alert("😵 坐下休息"); startQuiz(); }
+
+
+function weather(x){
+alert(x=="hot"?"☀️ 多喝水喔 💧":"❄️ 穿暖一點喔 🧥");
+nextStep(2);
+}
+
+function bodyFeel(x){
+if(x=="stomach")alert("🤢 先休息一下");
+if(x=="dizzy")alert("😵 坐下休息");
+startQuiz();
+}
 
 let questions=[],quiz=[],index=0,score=0;
-fetch("questions.json").then(r=>r.json()).then(d=>questions=d);
+
+fetch("questions.json")
+.then(r=>r.json())
+.then(d=>questions=d);
 
 function startQuiz(){
-    if(questions.length==0){ alert("題目還沒載入，請稍等一下"); return; }
-    quiz=[...questions].sort(()=>Math.random()-0.5).slice(0,20);
-    index=0; score=0; nextStep(3); showQuestion();
+if(questions.length==0){
+alert("題目還沒載入，請稍等一下");
+return;
+}
+
+quiz=[...questions].sort(()=>Math.random()-0.5).slice(0,20);
+index=0;
+score=0;
+nextStep(3);
+showQuestion();
 }
 
 function showQuestion(){
-    let q=quiz[index];
-    document.getElementById("quiz-area").innerHTML=`<h2>第 ${index+1}/20 題</h2><h2>${q.q}</h2>${q.a.map(a=>`<button onclick="answer('${a}')">${a}</button>`).join("")}<div id="answer"></div>`;
+let q=quiz[index];
+
+document.getElementById("quiz-area").innerHTML=
+
+<h2>第 ${index+1}/20 題</h2>
+<h2>${q.q}</h2>
+${q.a.map(a=><button onclick="answer('${a}')">${a}</button>).join("")}
+<div id="answer"></div>;
 }
 
 function answer(a){
-    let q=quiz[index];
-    document.getElementById("answer").innerHTML=a==q.correct?"🌸答對了":"答案："+q.correct;
-    if(a==q.correct)score++;
-    setTimeout(()=>{
-        index++;
-        if(index<20) showQuestion();
-        else {
-            document.getElementById("score-result").innerHTML = `答對了 ${score} 題！`;
-            nextStep("3_5");
-        }
-    },1500);
+let q=quiz[index];
+
+document.getElementById("answer").innerHTML=
+a==q.correct?"🌸答對了":"答案："+q.correct;
+
+if(a==q.correct)score++;
+
+setTimeout(()=>{
+index++;
+
+if(index<20){
+showQuestion();
+}else{
+document.getElementById("scoreShow").innerHTML=
+`今天20題完成！答對 ${score} 題 ❤️`;
+nextStep(4);
+exerciseStart();
+
+}
+},1500);
 }
 
-// ... (運動邏輯保持不變) ...
-let ex=["站起來，雙手插腰，轉動你的腰和屁股~轉10圈就好","轉轉肩膀，往後轉10圈~再往前轉10圈喔","原地踏步30秒","墊腳尖~每次停2秒，做15次","最後做個深呼吸~每次5秒鐘~做5次"];
+let ex=["站起來，雙手插腰，轉動你的腰和屁股~轉10圈就好","轉轉肩膀，慢慢往後轉10圈~再往前轉10圈喔","原地踏步30秒","墊腳尖~每次停2秒，做15次","最後做個深呼吸~每次5秒鐘~做5次"];
 let ei=0;
 let timer=null;
 
 function exerciseStart(){
-    if(timer) clearInterval(timer);
-    let sec=30;
-    document.getElementById("exercise").innerHTML=ex[ei];
-    document.getElementById("timer").innerHTML=sec+"秒";
-    document.getElementById("done").disabled=true;
-    timer=setInterval(()=>{
-        sec--;
-        document.getElementById("timer").innerHTML=sec+"秒";
-        if(sec<=0){ clearInterval(timer); timer=null; document.getElementById("timer").innerHTML="完成！"; document.getElementById("done").disabled=false; }
-    },1000);
+
+if(timer) clearInterval(timer);
+
+let sec=30;
+
+document.getElementById("exercise").innerHTML=ex[ei];
+document.getElementById("timer").innerHTML=sec+"秒";
+document.getElementById("done").disabled=true;
+
+timer=setInterval(()=>{
+
+sec--;
+
+document.getElementById("timer").innerHTML=sec+"秒";
+
+if(sec<=0){
+
+clearInterval(timer);
+timer=null;
+
+document.getElementById("timer").innerHTML="完成！";
+document.getElementById("done").disabled=false;
+
+}
+
+},1000);
+
 }
 
 function nextExercise(){
-    ei++;
-    if(ei<ex.length) exerciseStart();
-    else nextStep(5);
+ei++;
+
+if(ei<ex.length)exerciseStart();
+else{
+document.getElementById("result").innerHTML=
+20題完成！答對 ${score} 題 ❤️;
+nextStep(5);
+}
 }
 </script>
+
 </body>
 </html>
