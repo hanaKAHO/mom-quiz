@@ -103,7 +103,7 @@ alert("題目還沒載入，請稍等一下");
 return;
 }
 
-quiz=[...questions].sort(()=>Math.random()-0.5).slice(0,20);
+quiz=[...questions].sort(()=>Math.random()-0.5).slice(0,10);
 index=0;
 score=0;
 nextStep(3);
@@ -116,7 +116,7 @@ let q=quiz[index];
 
 document.getElementById("quiz-area").innerHTML=
 `
-<h2>第 ${index+1}/20 題</h2>
+<h2>第 ${index+1}/10 題</h2>
 <h2>${q.q}</h2>
 ${q.a.map(a=>`<button onclick="answer('${a}')">${a}</button>`).join("")}
 <div id="answer"></div>`;
@@ -135,12 +135,12 @@ setTimeout(()=>{
 
 index++;
 
-if(index<20){
+if(index<10){
 showQuestion();
 }else{
 
 document.getElementById("scoreShow").innerHTML=
-`今天20題完成！答對 ${score} 題 ❤️`;
+`今天10題完成！答對 ${score} 題 ❤️`;
 
 nextStep(4);
 exerciseStart();
@@ -153,11 +153,11 @@ exerciseStart();
 
 
 let ex=[
-"伸伸手",
-"轉肩膀",
-"踏步",
-"深呼吸",
-"拍拍手"
+"站起來，雙手插腰，轉動你的腰和屁股~轉10圈就好",
+  "轉轉肩膀，往後繞10圈~再往前10圈喔",
+    "轉轉脖子，往左看~往右看~往上看~往下看",
+  "原地踏步30秒","墊腳尖~每次停2秒，做15次",
+  "最後做個深呼吸~每次5秒鐘~做5次"
 ];
 
 let ei=0;
@@ -206,7 +206,7 @@ exerciseStart();
 }else{
 
 document.getElementById("result").innerHTML=
-`20題完成！答對 ${score} 題 ❤️`;
+`10題完成！答對 ${score} 題 ❤️`;
 
 nextStep(5);
 
