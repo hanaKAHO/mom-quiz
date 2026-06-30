@@ -2,119 +2,161 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>麗香的每日健康闖關</title>
-
 <style>
-    body { font-family: "Microsoft JhengHei", sans-serif; background: #fffcf5; text-align: center; padding: 30px; line-height: 1.6; font-size: 32px; }
-    .step { display: none; }
-    .active { display: block; }
-    h1 { font-size: 56px; white-space: pre-line; color: #333; }
-    h2 { font-size: 48px; color: #d84315; }
-    button { width: 95%; padding: 35px; margin: 20px auto; font-size: 40px; font-weight: bold; border-radius: 30px; border: 3px solid #ccc; box-shadow: 0 6px 12px #aaa; display: block; }
-    .btn-heat { background: #ffe0b2; } .btn-cold { background: #b3e5fc; }
-    .btn-pain { background: #ffcdd2; } .btn-yes { background: #dcedc8; }
-    #timerDisplay { font-size: 100px; font-weight: bold; color: #2e7d32; margin: 30px 0; }
-    #answer { font-size: 40px; font-weight: bold; margin-top: 30px; color: #d32f2f; }
+body{font-family:"Microsoft JhengHei";background:#fffaf0;text-align:center;padding:25px}
+.step{display:none}.active{display:block}
+h1{font-size:48px;white-space:pre-line}
+h2{font-size:40px}
+button{width:90%;padding:30px;margin:15px;font-size:32px;border-radius:25px;border:none}
+.hot{background:#ffe0b2}.cold{background:#b3e5fc}.good{background:#dcedc8}.bad{background:#ffcdd2}
+#answer{font-size:35px}
 </style>
 </head>
-
 <body>
 
 <div id="step0" class="step active">
-    <h1 id="greeting"></h1>
-    <button onclick="nextStep(1)">開始今天任務 🌸</button>
+<h1 id="greeting"></h1>
+<button onclick="nextStep(1)">開始今天任務 🌸</button>
 </div>
 
 <div id="step1" class="step">
-    <h2>今天天氣感覺如何？</h2>
-    <button class="btn-heat" onclick="feel('hot');delayNext(2)">☀️ 覺得熱</button>
-    <button class="btn-cold" onclick="feel('cold');delayNext(2)">❄️ 覺得冷</button>
+<h2>今天天氣感覺如何？</h2>
+<button class="hot" onclick="weather('hot')">☀️ 覺得熱</button>
+<button class="cold" onclick="weather('cold')">❄️ 覺得冷</button>
 </div>
 
 <div id="step2" class="step">
-    <h2>今天身體感覺如何？</h2>
-    <button class="btn-pain" onclick="feel('stomach');startQuiz()">🤢 胃痛</button>
-    <button class="btn-pain" onclick="feel('dizzy');startQuiz()">😵 頭暈</button>
-    <button class="btn-yes" onclick="startQuiz()">😊 精神很好</button>
+<h2>今天身體感覺如何？</h2>
+<button class="bad" onclick="bodyFeel('stomach')">🤢 胃痛</button>
+<button class="bad" onclick="bodyFeel('dizzy')">😵 頭暈</button>
+<button class="good" onclick="bodyFeel('good')">😊 精神很好</button>
 </div>
 
 <div id="step3" class="step">
-    <div id="quiz-area"></div>
+<div id="quiz-area"></div>
 </div>
 
 <div id="step4" class="step">
-    <h2>一起動一動，麗香真棒！</h2>
-    <div id="exerciseName" style="font-size: 48px; font-weight: bold; color: #ef6c00;"></div>
-    <div id="exerciseCount" style="font-size: 40px; color: #666;"></div>
-    <div id="timerDisplay"></div>
-    <button id="exerciseBtn" onclick="nextExercise()" style="background: #a5d6a7;" disabled>完成這個動作 👍</button>
+<h2>動一動時間 🌸</h2>
+<h2 id="exercise"></h2>
+<h1 id="timer"></h1>
+<button id="done" disabled onclick="nextExercise()">完成 👍</button>
 </div>
 
 <div id="step5" class="step">
-    <h2>🌸 今天完成囉！</h2>
-    <h2 id="result"></h2>
-    <button onclick="location.reload()">明天再一起玩 ❤️</button>
+<h2>🎉 完成囉！</h2>
+<h2 id="result"></h2>
+<button onclick="location.reload()">明天再玩 ❤️</button>
 </div>
 
 <script>
-    let currentStep = 0;
-    let questions = [], today = [], qIndex = 0, score = 0, loaded = false, e = 0;
-    const exercises = ["伸伸手10次", "轉轉肩膀", "原地踏步30秒", "深呼吸5次", "拍拍手10次"];
+let current=0;
 
-    function nextStep(n) {
-        document.getElementById("step" + currentStep).classList.remove("active");
-        currentStep = n;
-        document.getElementById("step" + n).classList.add("active");
-    }
+function nextStep(n){
+document.getElementById("step"+current).classList.remove("active");
+current=n;
+document.getElementById("step"+n).classList.add("active");
+}
 
-    function delayNext(n) { setTimeout(() => nextStep(n), 300); }
+let d=new Date();
+let week=["星期日","星期一","星期二","星期三","星期四","星期五","星期六"];
+document.getElementById("greeting").innerText=
+`麗香早安 🌸
+今天是 ${d.getMonth()+1}月${d.getDate()}日 ${week[d.getDay()]}`;
 
-    // 初始化讀取題目
-    fetch("questions.json").then(r => r.json()).then(d => { questions = d; loaded = true; }).catch(() => alert("找不到題目檔"));
+function weather(x){
+alert(x=="hot"?"☀️ 多喝水喔 💧":"❄️ 穿暖一點喔 🧥");
+nextStep(2);
+}
 
-    function startQuiz() {
-        if (!loaded) return alert("題目還在準備中...");
-        today = [...questions].sort(() => Math.random() - 0.5).slice(0, 20);
-        qIndex = 0; score = 0; nextStep(3); showQuestion();
-    }
+function bodyFeel(x){
+if(x=="stomach")alert("🤢 先休息一下");
+if(x=="dizzy")alert("😵 坐下休息");
+startQuiz();
+}
 
-    function showQuestion() {
-        let q = today[qIndex];
-        document.getElementById("quiz-area").innerHTML = `<h2>第 ${qIndex + 1}/20 題</h2><h2>${q.q}</h2>` + 
-            q.a.map(x => `<button onclick="answer('${x.replace(/'/g, "&#39;")}')">${x}</button>`).join("") + `<div id="answer"></div>`;
-    }
+let questions=[],quiz=[],index=0,score=0;
 
-    function answer(a) {
-        let q = today[qIndex], ans = document.getElementById("answer");
-        document.querySelectorAll("#quiz-area button").forEach(b => b.disabled = true);
-        if (a === q.correct) { score++; ans.innerHTML = "🌸答對了！"; } else { ans.innerHTML = "答案：" + q.correct; }
-        let s = 2;
-        let t = setInterval(() => {
-            ans.innerHTML += `<br>${s} 秒後下一題`; s--;
-            if (s < 0) { clearInterval(t); qIndex++; qIndex < 20 ? showQuestion() : (nextStep(4), loadExercise()); }
-        }, 1000);
-    }
+fetch("questions.json")
+.then(r=>r.json())
+.then(d=>questions=d);
 
-    function loadExercise() {
-        let btn = document.getElementById("exerciseBtn"); btn.disabled = true;
-        let s = 30; document.getElementById("exerciseName").innerText = exercises[e];
-        let t = setInterval(() => {
-            s--; document.getElementById("timerDisplay").innerText = s + " 秒";
-            if (s <= 0) { clearInterval(t); document.getElementById("timerDisplay").innerText = "✅"; btn.disabled = false; }
-        }, 1000);
-    }
+function startQuiz(){
+if(questions.length==0){
+alert("題目還沒載入，請稍等一下");
+return;
+}
 
-    function nextExercise() {
-        e++;
-        if (e < exercises.length) { loadExercise(); } 
-        else { document.getElementById("result").innerText = `今天20題完成！答對 ${score} 題 ❤️`; nextStep(5); }
-    }
+quiz=[...questions].sort(()=>Math.random()-0.5).slice(0,20);
+index=0;
+score=0;
+nextStep(3);
+showQuestion();
+}
 
-    // 初始問候
-    const d = new Date();
-    const w = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
-    document.getElementById("greeting").innerText = `麗香早安 🌸\n今天是 ${d.getMonth()+1}月${d.getDate()}日 ${w[d.getDay()]}`;
+function showQuestion(){
+let q=quiz[index];
+
+document.getElementById("quiz-area").innerHTML=
+`
+<h2>第 ${index+1}/20 題</h2>
+<h2>${q.q}</h2>
+${q.a.map(a=>`<button onclick="answer('${a}')">${a}</button>`).join("")}
+<div id="answer"></div>`;
+}
+
+function answer(a){
+let q=quiz[index];
+
+document.getElementById("answer").innerHTML=
+a==q.correct?"🌸答對了":"答案："+q.correct;
+
+if(a==q.correct)score++;
+
+setTimeout(()=>{
+index++;
+
+if(index<20)showQuestion();
+else{
+nextStep(4);
+exerciseStart();
+}
+},1500);
+}
+
+let ex=["伸伸手","轉肩膀","踏步","深呼吸","拍拍手"];
+let ei=0;
+
+function exerciseStart(){
+let sec=10;
+document.getElementById("exercise").innerHTML=ex[ei];
+document.getElementById("done").disabled=true;
+
+let t=setInterval(()=>{
+document.getElementById("timer").innerHTML=sec+"秒";
+sec--;
+
+if(sec<0){
+clearInterval(t);
+document.getElementById("timer").innerHTML="完成！";
+document.getElementById("done").disabled=false;
+}
+},1000);
+}
+
+function nextExercise(){
+ei++;
+
+if(ei<ex.length)exerciseStart();
+else{
+document.getElementById("result").innerHTML=
+`20題完成！答對 ${score} 題 ❤️`;
+nextStep(5);
+}
+}
 </script>
+
 </body>
 </html>
