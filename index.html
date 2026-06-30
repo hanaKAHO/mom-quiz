@@ -6,47 +6,16 @@
 <title>麗香的每日健康闖關</title>
 
 <style>
-/* 放大字體與增加閱讀舒適度 */
-body {
-    font-family: "Microsoft JhengHei", sans-serif;
-    background: #fffcf5;
-    text-align: center;
-    padding: 30px;
-    line-height: 1.6; /* 增加行距 */
-    font-size: 32px; /* 全域基礎字體加大 */
-}
-
-.step { display: none; }
-.active { display: block; }
-
-h1 { font-size: 56px; white-space: pre-line; color: #333; }
-h2 { font-size: 48px; color: #d84315; }
-
-button {
-    width: 95%;
-    padding: 35px; /* 按鈕加大，更易點擊 */
-    margin: 20px auto;
-    font-size: 40px; /* 按鈕字體特大 */
-    font-weight: bold;
-    border-radius: 30px;
-    border: 3px solid #ccc;
-    box-shadow: 0 6px 12px #aaa;
-    display: block;
-}
-
-.btn-heat { background: #ffe0b2; }
-.btn-cold { background: #b3e5fc; }
-.btn-pain { background: #ffcdd2; }
-.btn-yes { background: #dcedc8; }
-
-#timerDisplay {
-    font-size: 100px; /* 計時器極大化 */
-    font-weight: bold;
-    color: #2e7d32;
-    margin: 30px 0;
-}
-
-#answer { font-size: 40px; font-weight: bold; margin-top: 30px; color: #d32f2f; }
+    body { font-family: "Microsoft JhengHei", sans-serif; background: #fffcf5; text-align: center; padding: 30px; line-height: 1.6; font-size: 32px; }
+    .step { display: none; }
+    .active { display: block; }
+    h1 { font-size: 56px; white-space: pre-line; color: #333; }
+    h2 { font-size: 48px; color: #d84315; }
+    button { width: 95%; padding: 35px; margin: 20px auto; font-size: 40px; font-weight: bold; border-radius: 30px; border: 3px solid #ccc; box-shadow: 0 6px 12px #aaa; display: block; }
+    .btn-heat { background: #ffe0b2; } .btn-cold { background: #b3e5fc; }
+    .btn-pain { background: #ffcdd2; } .btn-yes { background: #dcedc8; }
+    #timerDisplay { font-size: 100px; font-weight: bold; color: #2e7d32; margin: 30px 0; }
+    #answer { font-size: 40px; font-weight: bold; margin-top: 30px; color: #d32f2f; }
 </style>
 </head>
 
@@ -90,6 +59,9 @@ button {
 
 <script>
     let currentStep = 0;
+    let questions = [], today = [], qIndex = 0, score = 0, loaded = false, e = 0;
+    const exercises = ["伸伸手10次", "轉轉肩膀", "原地踏步30秒", "深呼吸5次", "拍拍手10次"];
+
     function nextStep(n) {
         document.getElementById("step" + currentStep).classList.remove("active");
         currentStep = n;
@@ -98,27 +70,51 @@ button {
 
     function delayNext(n) { setTimeout(() => nextStep(n), 300); }
 
-    // 日期問候設定
-    const d = new Date();
-    const w = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
-    let g = `麗香早安 🌸\n今天是 ${d.getMonth()+1}月${d.getDate()}日 ${w[d.getDay()]}`;
-    if(d.getDay()==2||d.getDay()==5) g += "\n\n今天下午2:30金妹會來喔 😊";
-    if(d.getDay()==3||d.getDay()==0) g += "\n\n今天沒有垃圾車喔 🚛";
-    document.getElementById("greeting").innerText = g;
+    // 初始化讀取題目
+    fetch("questions.json").then(r => r.json()).then(d => { questions = d; loaded = true; }).catch(() => alert("找不到題目檔"));
 
-    function feel(t) {
-        const m = {
-            hot: "☀️ 記得吹電風、多喝水喔！💧",
-            cold: "❄️ 要記得穿保暖衣服喔！🧥",
-            stomach: "🤢 先深呼吸、熱敷一下肚子喔！❤️",
-            dizzy: "😵 請先坐下來休息一下喔！🌸"
-        };
-        alert(m[t]);
+    function startQuiz() {
+        if (!loaded) return alert("題目還在準備中...");
+        today = [...questions].sort(() => Math.random() - 0.5).slice(0, 20);
+        qIndex = 0; score = 0; nextStep(3); showQuestion();
     }
 
-    // 題目邏輯保持不變，但因CSS已全域放大，按鈕會自動變大
-    // ... (後續 JavaScript 邏輯同前一版)
-</script>
+    function showQuestion() {
+        let q = today[qIndex];
+        document.getElementById("quiz-area").innerHTML = `<h2>第 ${qIndex + 1}/20 題</h2><h2>${q.q}</h2>` + 
+            q.a.map(x => `<button onclick="answer('${x.replace(/'/g, "&#39;")}')">${x}</button>`).join("") + `<div id="answer"></div>`;
+    }
 
+    function answer(a) {
+        let q = today[qIndex], ans = document.getElementById("answer");
+        document.querySelectorAll("#quiz-area button").forEach(b => b.disabled = true);
+        if (a === q.correct) { score++; ans.innerHTML = "🌸答對了！"; } else { ans.innerHTML = "答案：" + q.correct; }
+        let s = 2;
+        let t = setInterval(() => {
+            ans.innerHTML += `<br>${s} 秒後下一題`; s--;
+            if (s < 0) { clearInterval(t); qIndex++; qIndex < 20 ? showQuestion() : (nextStep(4), loadExercise()); }
+        }, 1000);
+    }
+
+    function loadExercise() {
+        let btn = document.getElementById("exerciseBtn"); btn.disabled = true;
+        let s = 30; document.getElementById("exerciseName").innerText = exercises[e];
+        let t = setInterval(() => {
+            s--; document.getElementById("timerDisplay").innerText = s + " 秒";
+            if (s <= 0) { clearInterval(t); document.getElementById("timerDisplay").innerText = "✅"; btn.disabled = false; }
+        }, 1000);
+    }
+
+    function nextExercise() {
+        e++;
+        if (e < exercises.length) { loadExercise(); } 
+        else { document.getElementById("result").innerText = `今天20題完成！答對 ${score} 題 ❤️`; nextStep(5); }
+    }
+
+    // 初始問候
+    const d = new Date();
+    const w = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+    document.getElementById("greeting").innerText = `麗香早安 🌸\n今天是 ${d.getMonth()+1}月${d.getDate()}日 ${w[d.getDay()]}`;
+</script>
 </body>
 </html>
