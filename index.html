@@ -1,106 +1,364 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>媽媽的每日練習</title>
-    <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; padding: 20px; background-color: #fdf6e3; }
-        #quiz-container { width: 100%; max-width: 600px; text-align: center; }
-        .question { font-size: 32px; margin-bottom: 25px; color: #333; font-weight: bold; }
-        button { display: block; width: 100%; padding: 25px; margin: 15px 0; font-size: 24px; cursor: pointer; border: none; border-radius: 15px; background-color: #fff; box-shadow: 3px 3px 8px #ccc; }
-        button:active { background-color: #e0e0e0; }
-        #feedback { font-size: 28px; margin-top: 20px; font-weight: bold; min-height: 40px; }
-        #score-board { font-size: 30px; color: #d35400; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>麗香的每日練習 🌸</title>
+
+<style>
+
+body {
+    font-family: "Microsoft JhengHei", sans-serif;
+    display:flex;
+    justify-content:center;
+    padding:20px;
+    background:#FFF9F2;
+}
+
+#quiz-container {
+    width:100%;
+    max-width:650px;
+    text-align:center;
+}
+
+.question {
+    font-size:42px;
+    line-height:1.5;
+    margin-bottom:25px;
+    color:#333;
+    font-weight:bold;
+}
+
+button {
+    display:block;
+    width:100%;
+    padding:30px;
+    margin:18px 0;
+    font-size:34px;
+    cursor:pointer;
+    border:none;
+    border-radius:20px;
+    background:white;
+    box-shadow:3px 5px 12px #ddd;
+}
+
+button:active {
+    transform:scale(0.98);
+}
+
+button:disabled {
+    opacity:0.7;
+}
+
+#feedback {
+    font-size:34px;
+    margin-top:25px;
+    min-height:60px;
+    font-weight:bold;
+}
+
+#score-board {
+    font-size:32px;
+    color:#555;
+}
+
+#progress {
+    width:100%;
+    height:25px;
+    background:#eee;
+    border-radius:20px;
+    margin-bottom:25px;
+    overflow:hidden;
+}
+
+#bar {
+    height:100%;
+    width:0%;
+    background:#f4b942;
+}
+
+</style>
 </head>
+
+
 <body>
 
+
 <div id="quiz-container">
-    <div id="game-area">
-        <div class="question" id="question">載入中...</div>
-        <div id="options"></div>
-        <div id="feedback"></div>
-    </div>
-    <div id="score-board" style="display:none;"></div>
+
+
+<div id="game-area">
+
+
+<div id="progress">
+<div id="bar"></div>
 </div>
 
+
+<div class="question" id="question">
+載入中...
+</div>
+
+
+<div id="options"></div>
+
+
+<div id="feedback"></div>
+
+
+</div>
+
+
+<div id="score-board" style="display:none;"></div>
+
+
+</div>
+
+
+
 <script>
-    let allQuestions = []; // 將會從 JSON 載入
-    let dailyQuestions = [];
-    let currentIdx = 0;
-    let score = 0;
 
-    // 讀取 JSON 題庫
-    fetch('questions.json')
-        .then(res => res.json())
-        .then(data => {
-            allQuestions = data;
-            startNewGame();
-        });
 
-    function startNewGame() {
-        // 隨機選出 10 題
-        dailyQuestions = [...allQuestions].sort(() => 0.5 - Math.random()).slice(0, 10);
-        currentIdx = 0;
-        score = 0;
-        document.getElementById('score-board').style.display = 'none';
-        document.getElementById('game-area').style.display = 'block';
-        loadQuestion();
+let allQuestions=[];
+let dailyQuestions=[];
+let currentIdx=0;
+let score=0;
+let locked=false;
+
+
+const praise=[
+"🌸 太棒了！",
+"😊 做得很好！",
+"❤️ 媽媽真厲害！",
+"👏 完全正確！",
+"🌷 今天狀況很好喔！",
+"🎉 好棒！"
+];
+
+
+//讀題庫
+
+fetch('questions.json')
+.then(res=>res.json())
+.then(data=>{
+    allQuestions=data;
+    startNewGame();
+});
+
+
+
+function startNewGame(){
+
+    dailyQuestions=
+    [...allQuestions]
+    .sort(()=>0.5-Math.random())
+    .slice(0,20);
+
+
+    currentIdx=0;
+    score=0;
+
+    locked=false;
+
+
+    document.getElementById("score-board").style.display="none";
+
+    document.getElementById("game-area").style.display="block";
+
+
+    loadQuestion();
+
+}
+
+
+
+function loadQuestion(){
+
+
+    locked=false;
+
+
+    let qData=dailyQuestions[currentIdx];
+
+
+    document.getElementById("question")
+    .innerText=
+    `第 ${currentIdx+1} / 20 題\n${qData.q}`;
+
+
+    document.getElementById("bar")
+    .style.width=
+    ((currentIdx)/20*100)+"%";
+
+
+
+    let optionsDiv=document.getElementById("options");
+
+    optionsDiv.innerHTML="";
+
+
+    qData.a.forEach(opt=>{
+
+
+        let btn=document.createElement("button");
+
+
+        btn.innerText=opt;
+
+
+        btn.onclick=()=>check(opt,btn);
+
+
+        optionsDiv.appendChild(btn);
+
+
+    });
+
+
+}
+
+
+
+function check(ans,clickedButton){
+
+
+    if(locked)return;
+
+
+    locked=true;
+
+
+    document.querySelectorAll("button")
+    .forEach(b=>b.disabled=true);
+
+
+
+    let qData=dailyQuestions[currentIdx];
+
+
+    let feedback=
+    document.getElementById("feedback");
+
+
+
+    if(ans===qData.correct){
+
+
+        score+=10;
+
+
+        feedback.style.color="#2e7d32";
+
+        feedback.innerText=
+        praise[Math.floor(Math.random()*praise.length)];
+
+
+    }else{
+
+
+        feedback.style.color="#1565c0";
+
+        feedback.innerText=
+        "😊 這題答案是：\n\n"+
+        qData.correct+
+        "\n\n我們一起記住它～";
+
     }
 
-    function loadQuestion() {
-        const qData = dailyQuestions[currentIdx];
-        document.getElementById('question').innerText = `第 ${currentIdx + 1}/10 題：${qData.q}`;
-        const optionsDiv = document.getElementById('options');
-        optionsDiv.innerHTML = '';
-        qData.a.forEach(opt => {
-            const btn = document.createElement('button');
-            btn.innerText = opt;
-            btn.onclick = () => check(opt);
-            optionsDiv.appendChild(btn);
-        });
-    }
-function check(ans) {
-        const qData = dailyQuestions[currentIdx];
-        const feedbackDiv = document.getElementById('feedback');
-        
-        if(ans === qData.correct) {
-            score += 10;
-            feedbackDiv.style.color = "green";
-            feedbackDiv.innerText = "答對了！太棒了！";
-        } else {
-            feedbackDiv.style.color = "red";
-            // 這一行是新增的：告訴她正確答案
-            feedbackDiv.innerText = "再想一下喔～正確答案是：" + qData.correct;
+
+
+    setTimeout(()=>{
+
+
+        currentIdx++;
+
+
+        feedback.innerText="";
+
+
+        if(currentIdx<20){
+
+            loadQuestion();
+
+        }else{
+
+            showResult();
+
         }
 
-        setTimeout(() => {
-            currentIdx++;
-            feedbackDiv.innerText = "";
-            if(currentIdx < 10) {
-                loadQuestion();
-            } else {
-                showResult();
-            }
-        }, 2000); // 延長到 2 秒，讓媽媽有時間看清楚正確答案
-    }
-    
 
-    function showResult() {
-        document.getElementById('game-area').style.display = 'none';
-        const board = document.getElementById('score-board');
-        board.style.display = 'block';
-        
-        let msg = "";
-        if(score === 100) msg = "100分！超級棒！";
-        else if(score >= 90) msg = score + "分，很棒喔！";
-        else if(score >= 80) msg = score + "分，不錯喔！";
-        else if(score >= 70) msg = score + "分，還可以啦！";
-        else msg = score + "分，要加油喔！";
-        
-        board.innerHTML = `<p>${msg}</p><button onclick="location.reload()">再玩一次</button>`;
-    }
+    },2500);
+
+
+
+}
+
+
+
+
+function showResult(){
+
+
+document.getElementById("game-area")
+.style.display="none";
+
+
+let board=
+document.getElementById("score-board");
+
+
+board.style.display="block";
+
+
+
+let correct=score/10;
+
+
+let msg="";
+
+
+
+if(correct===20){
+
+msg=
+"🌸🌸🌸<br><br>"+
+"今天全部答對！<br><br>"+
+"媽媽太棒了 ❤️";
+
+}
+
+else{
+
+
+msg=
+"🌷 今天完成20題！<br><br>"+
+"答對 "+correct+" 題<br><br>"+
+"每天練習一點點<br>"+
+"就是最棒的進步 ❤️";
+
+}
+
+
+
+board.innerHTML=
+`
+<p>${msg}</p>
+
+<br>
+
+<button onclick="startNewGame()">
+🌸 今天再玩一次
+</button>
+
+`;
+
+}
+
+
+
 </script>
+
+
 </body>
 </html>
