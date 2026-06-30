@@ -62,9 +62,21 @@ document.getElementById("step"+n).classList.add("active");
 
 let d=new Date();
 let week=["星期日","星期一","星期二","星期三","星期四","星期五","星期六"];
-document.getElementById("greeting").innerText=
-`麗香早安 🌸
+
+let greeting=`麗香早安 🌸
 今天是 ${d.getMonth()+1}月${d.getDate()}日 ${week[d.getDay()]}`;
+
+if(d.getDay()==3||d.getDay()==0){
+greeting+="\n\n今天沒有垃圾車喔 🚛";
+}
+
+if(d.getDay()==2||d.getDay()==5){
+greeting+="\n\n今天下午2:30金妹會來喔 😊";
+}
+
+document.getElementById("greeting").innerText=greeting;
+
+
 
 function weather(x){
 alert(x=="hot"?"☀️ 多喝水喔 💧":"❄️ 穿暖一點喔 🧥");
@@ -128,22 +140,36 @@ exerciseStart();
 
 let ex=["伸伸手","轉肩膀","踏步","深呼吸","拍拍手"];
 let ei=0;
+let timer=null;
 
 function exerciseStart(){
-let sec=10;
+
+if(timer) clearInterval(timer);
+
+let sec=30;
+
 document.getElementById("exercise").innerHTML=ex[ei];
+document.getElementById("timer").innerHTML=sec+"秒";
 document.getElementById("done").disabled=true;
 
-let t=setInterval(()=>{
-document.getElementById("timer").innerHTML=sec+"秒";
+timer=setInterval(()=>{
+
 sec--;
 
-if(sec<0){
-clearInterval(t);
+document.getElementById("timer").innerHTML=sec+"秒";
+
+if(sec<=0){
+
+clearInterval(timer);
+timer=null;
+
 document.getElementById("timer").innerHTML="完成！";
 document.getElementById("done").disabled=false;
+
 }
+
 },1000);
+
 }
 
 function nextExercise(){
