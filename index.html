@@ -1,364 +1,80 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>麗香的每日練習 🌸</title>
-
-<style>
-
-body {
-    font-family: "Microsoft JhengHei", sans-serif;
-    display:flex;
-    justify-content:center;
-    padding:20px;
-    background:#FFF9F2;
-}
-
-#quiz-container {
-    width:100%;
-    max-width:650px;
-    text-align:center;
-}
-
-.question {
-    font-size:42px;
-    line-height:1.5;
-    margin-bottom:25px;
-    color:#333;
-    font-weight:bold;
-}
-
-button {
-    display:block;
-    width:100%;
-    padding:30px;
-    margin:18px 0;
-    font-size:34px;
-    cursor:pointer;
-    border:none;
-    border-radius:20px;
-    background:white;
-    box-shadow:3px 5px 12px #ddd;
-}
-
-button:active {
-    transform:scale(0.98);
-}
-
-button:disabled {
-    opacity:0.7;
-}
-
-#feedback {
-    font-size:34px;
-    margin-top:25px;
-    min-height:60px;
-    font-weight:bold;
-}
-
-#score-board {
-    font-size:32px;
-    color:#555;
-}
-
-#progress {
-    width:100%;
-    height:25px;
-    background:#eee;
-    border-radius:20px;
-    margin-bottom:25px;
-    overflow:hidden;
-}
-
-#bar {
-    height:100%;
-    width:0%;
-    background:#f4b942;
-}
-
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>麗香的每日健康闖關</title>
+    <style>
+        body { font-family: sans-serif; background-color: #fffaf0; padding: 15px; text-align: center; color: #333; }
+        .step { display: none; margin-top: 20px; }
+        .active { display: block; }
+        button { width: 90%; padding: 25px; margin: 10px 0; font-size: 24px; border: none; border-radius: 15px; box-shadow: 2px 2px 5px #ccc; cursor: pointer; background: #fff; }
+        .btn-yes { background: #c8e6c9; }
+        .btn-heat { background: #ffcc80; }
+        .btn-cold { background: #81d4fa; }
+        .btn-pain { background: #ef9a9a; }
+        #advice { font-size: 24px; font-weight: bold; color: #b71c1c; margin: 20px; }
+    </style>
 </head>
-
-
 <body>
 
-
-<div id="quiz-container">
-
-
-<div id="game-area">
-
-
-<div id="progress">
-<div id="bar"></div>
+<div id="step0" class="step active">
+    <h2 id="greeting"></h2>
+    <button onclick="nextStep(1)">開始今日任務</button>
 </div>
 
-
-<div class="question" id="question">
-載入中...
+<div id="step1" class="step">
+    <h2>今天天氣如何呢？</h2>
+    <button class="btn-heat" onclick="setWeather('熱', '天氣熱，多喝水、吹電風扇，穿涼爽點喔！')">覺得熱</button>
+    <button class="btn-cold" onclick="setWeather('冷', '天氣涼，要加件外套，喝溫水暖暖身子喔。')">覺得冷</button>
 </div>
 
-
-<div id="options"></div>
-
-
-<div id="feedback"></div>
-
-
+<div id="step2" class="step">
+    <h2>今天身體狀況如何？</h2>
+    <button class="btn-pain" onclick="setBody('胃痛', '胃痛時試著深呼吸放鬆，休息一下不要急。')">有點胃痛</button>
+    <button class="btn-pain" onclick="setBody('累', '身體累就閉目養神，不要太操勞。')">覺得累</button>
+    <button class="btn-yes" onclick="setBody('好', '精神很好，太棒了！')">精神很好</button>
 </div>
 
-
-<div id="score-board" style="display:none;"></div>
-
-
+<div id="step3" class="step">
+    <div id="quiz-area"></div>
 </div>
 
+<div id="step4" class="step">
+    <h2 id="ex-name"></h2>
+    <button class="btn-yes" onclick="nextExercise()">完成這個動作！</button>
+</div>
 
+<div id="step5" class="step">
+    <h2>今天的活動完成了！很棒喔！</h2>
+    <button onclick="location.reload()">重新開始</button>
+</div>
 
 <script>
-
-
-let allQuestions=[];
-let dailyQuestions=[];
-let currentIdx=0;
-let score=0;
-let locked=false;
-
-
-const praise=[
-"🌸 太棒了！",
-"😊 做得很好！",
-"❤️ 媽媽真厲害！",
-"👏 完全正確！",
-"🌷 今天狀況很好喔！",
-"🎉 好棒！"
-];
-
-
-//讀題庫
-
-fetch('questions.json')
-.then(res=>res.json())
-.then(data=>{
-    allQuestions=data;
-    startNewGame();
-});
-
-
-
-function startNewGame(){
-
-    dailyQuestions=
-    [...allQuestions]
-    .sort(()=>0.5-Math.random())
-    .slice(0,20);
-
-
-    currentIdx=0;
-    score=0;
-
-    locked=false;
-
-
-    document.getElementById("score-board").style.display="none";
-
-    document.getElementById("game-area").style.display="block";
-
-
-    loadQuestion();
-
-}
-
-
-
-function loadQuestion(){
-
-
-    locked=false;
-
-
-    let qData=dailyQuestions[currentIdx];
-
-
-    document.getElementById("question")
-    .innerText=
-    `第 ${currentIdx+1} / 20 題\n${qData.q}`;
-
-
-    document.getElementById("bar")
-    .style.width=
-    ((currentIdx)/20*100)+"%";
-
-
-
-    let optionsDiv=document.getElementById("options");
-
-    optionsDiv.innerHTML="";
-
-
-    qData.a.forEach(opt=>{
-
-
-        let btn=document.createElement("button");
-
-
-        btn.innerText=opt;
-
-
-        btn.onclick=()=>check(opt,btn);
-
-
-        optionsDiv.appendChild(btn);
-
-
-    });
-
-
-}
-
-
-
-function check(ans,clickedButton){
-
-
-    if(locked)return;
-
-
-    locked=true;
-
-
-    document.querySelectorAll("button")
-    .forEach(b=>b.disabled=true);
-
-
-
-    let qData=dailyQuestions[currentIdx];
-
-
-    let feedback=
-    document.getElementById("feedback");
-
-
-
-    if(ans===qData.correct){
-
-
-        score+=10;
-
-
-        feedback.style.color="#2e7d32";
-
-        feedback.innerText=
-        praise[Math.floor(Math.random()*praise.length)];
-
-
-    }else{
-
-
-        feedback.style.color="#1565c0";
-
-        feedback.innerText=
-        "😊 這題答案是：\n\n"+
-        qData.correct+
-        "\n\n我們一起記住它～";
-
+    const exercises = ["兩手插腰身體轉(20次)", "站起來墊腳尖(30次)", "雙手平舉放下(15次)", "原地踏步擺手(1分鐘)", "深呼吸伸展(5次)"];
+    let exIdx = 0, currentStep = 0;
+
+    // 初始化日期
+    const date = new Date();
+    document.getElementById('greeting').innerText = `麗香早安！今天是 ${date.getMonth()+1}月${date.getDate()}日 星期${'日一二三四五六'[date.getDay()]}`;
+
+    function nextStep(s) {
+        document.getElementById('step'+currentStep).classList.remove('active');
+        currentStep = s;
+        document.getElementById('step'+currentStep).classList.add('active');
     }
 
+    function setWeather(t, msg) { alert(msg); nextStep(2); }
+    function setBody(t, msg) { alert(msg); loadQuiz(); nextStep(3); }
 
+    function loadQuiz() { /* 這邊接您之前的測驗邏輯 */ document.getElementById('quiz-area').innerHTML = "<h3>[動動腦測驗區] (請將之前的測驗代碼嵌入此處)</h3><button onclick='nextStep(4)'>測驗完成，開始運動！</button>"; }
 
-    setTimeout(()=>{
-
-
-        currentIdx++;
-
-
-        feedback.innerText="";
-
-
-        if(currentIdx<20){
-
-            loadQuestion();
-
-        }else{
-
-            showResult();
-
-        }
-
-
-    },2500);
-
-
-
-}
-
-
-
-
-function showResult(){
-
-
-document.getElementById("game-area")
-.style.display="none";
-
-
-let board=
-document.getElementById("score-board");
-
-
-board.style.display="block";
-
-
-
-let correct=score/10;
-
-
-let msg="";
-
-
-
-if(correct===20){
-
-msg=
-"🌸🌸🌸<br><br>"+
-"今天全部答對！<br><br>"+
-"媽媽太棒了 ❤️";
-
-}
-
-else{
-
-
-msg=
-"🌷 今天完成20題！<br><br>"+
-"答對 "+correct+" 題<br><br>"+
-"每天練習一點點<br>"+
-"就是最棒的進步 ❤️";
-
-}
-
-
-
-board.innerHTML=
-`
-<p>${msg}</p>
-
-<br>
-
-<button onclick="startNewGame()">
-🌸 今天再玩一次
-</button>
-
-`;
-
-}
-
-
-
+    function nextExercise() {
+        exIdx++;
+        if(exIdx < exercises.length) document.getElementById('ex-name').innerText = exercises[exIdx];
+        else nextStep(5);
+    }
+    document.getElementById('ex-name').innerText = exercises[0];
 </script>
-
-
 </body>
 </html>
