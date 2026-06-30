@@ -48,14 +48,40 @@
 </div>
 
 <script>
-    // 1. 測驗題庫 (請把您的題目貼到這裡)
-    const questions = [{q:"吃飯前發現手很髒，應該先？", a:["洗手","喝水"], correct:"洗手"}, {q:"買牛奶時，應該先注意什麼？", a:["有效日期","瓶子顏色"], correct:"有效日期"}];
-    let qIdx = 0, score = 0, currentStep = 0, exIdx = 0;
-    const exercises = ["兩手插腰身體左右轉", "站起來墊腳尖", "雙手向前平舉再放下", "原地踏步擺手", "深呼吸伸展雙手"];
+// 1. 測驗題庫：從外部 JSON 檔案讀取
+    let allQuestions = [];
+
+    // 網頁啟動時，自動去讀取 questions.json
+    fetch('questions.json')
+        .then(response => response.json())
+        .then(data => {
+            allQuestions = data;
+            console.log("題庫讀取成功，共 " + allQuestions.length + " 題");
+        })
+        .catch(err => {
+            console.error("無法讀取 questions.json，請檢查檔案名稱與位置", err);
+            // 備用方案：如果讀取失敗，顯示簡單提示
+            document.getElementById('q-text').innerText = "題庫載入失敗，請檢查網路或檔案位置";
+        });
+
+    let qIdx = 0, currentStep = 0, exIdx = 0;
 
     // 2. 初始化
+    // 初始化日期與生活提醒
     const date = new Date();
-    document.getElementById('greeting').innerText = `麗香早安！今天是 ${date.getMonth()+1}月${date.getDate()}日`;
+    const day = date.getDay(); // 0:星期日, 1:星期一, ..., 6:星期六
+    let reminder = "";
+
+    // 判斷提醒
+    if (day === 3 || day === 0) {
+        reminder = "（今天沒有垃圾車喔！）";
+    } else if (day === 2 || day === 5) {
+        reminder = "（下午 2:30 金妹會來喔！）";
+    }
+
+    document.getElementById('greeting').innerText = 
+        `麗香早安！今天是 ${date.getMonth()+1}月${date.getDate()}日 星期${'日一二三四五六'[day]} ${reminder}`;
+
 
     function nextStep(s) {
         document.querySelectorAll('.step').forEach(e => e.classList.remove('active'));
