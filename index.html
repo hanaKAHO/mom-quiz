@@ -2,15 +2,12 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>麗香的每日健康任務</title>
     <style>
-        body { font-family: sans-serif; background-color: #fffaf0; padding: 20px; text-align: center; color: #333; }
+        body { font-family: sans-serif; background-color: #fffaf0; padding: 20px; text-align: center; }
         .step { display: none; } .active { display: block; }
-        button { width: 95%; padding: 20px; margin: 10px 0; font-size: 24px; border: none; border-radius: 15px; background: #fff; box-shadow: 2px 2px 5px #ccc; }
-        .btn-yes { background: #c8e6c9; }
-        .btn-heat { background: #ffcc80; } .btn-cold { background: #81d4fa; } .btn-pain { background: #ef9a9a; }
-        #timer { font-size: 50px; font-weight: bold; color: #d32f2f; margin: 20px; }
+        button { width: 95%; padding: 20px; margin: 10px 0; font-size: 22px; border-radius: 15px; border: none; background: white; box-shadow: 2px 2px 5px #ccc; }
+        #timer { font-size: 60px; color: red; font-weight: bold; margin: 20px; }
     </style>
 </head>
 <body>
@@ -21,108 +18,80 @@
 </div>
 
 <div id="step1" class="step">
-    <h2>今天天氣如何？</h2>
-    <button class="btn-heat" onclick="setWeather('熱')">覺得熱</button>
-    <button class="btn-cold" onclick="setWeather('冷')">覺得冷</button>
+    <h2>現在覺得冷還是熱？</h2>
+    <button onclick="saveEnv('熱')">覺得熱</button>
+    <button onclick="saveEnv('冷')">覺得冷</button>
 </div>
+
 <div id="step2" class="step">
-    <h2>今天身體狀況如何？</h2>
-    <button class="btn-pain" onclick="setBody('有點胃痛')">有點胃痛</button>
-    <button class="btn-yes" onclick="setBody('精神很好')">精神很好</button>
+    <h2>身體狀況如何？</h2>
+    <button onclick="saveBody('胃痛')">有點胃痛</button>
+    <button onclick="saveBody('累')">覺得累</button>
+    <button onclick="saveBody('好')">精神很好</button>
 </div>
 
 <div id="step3" class="step">
-    <h3 id="q-text">題目載入中...</h3>
+    <h2 id="q-text">題目讀取中...</h2>
     <div id="q-btns"></div>
 </div>
 
 <div id="step4" class="step">
     <h2 id="ex-name"></h2>
     <div id="timer">30</div>
-    <button id="next-ex-btn" class="btn-yes" style="display:none" onclick="nextExercise()">完成！進入下一關</button>
+    <button id="finish-btn" style="display:none" onclick="nextEx()">完成！下一關</button>
 </div>
 
 <div id="step5" class="step">
-    <h2>全部完成了！麗香真棒！</h2>
-    <button onclick="location.reload()">再做一次</button>
+    <h2>今天的活動完成了！很棒！</h2>
+    <button onclick="location.reload()">重新開始</button>
 </div>
 
 <script>
-// 1. 測驗題庫：從外部 JSON 檔案讀取
-    let allQuestions = [];
+    let allQ = [], qCount = 0, step = 0, exIdx = 0;
+    const exs = ["兩手插腰身體左右轉(20次)", "站起來墊腳尖(30次)", "雙手平舉放下(15次)", "原地踏步擺手(1分鐘)", "深呼吸伸展(5次)"];
 
-    // 網頁啟動時，自動去讀取 questions.json
-    fetch('questions.json')
-        .then(response => response.json())
-        .then(data => {
-            allQuestions = data;
-            console.log("題庫讀取成功，共 " + allQuestions.length + " 題");
-        })
-        .catch(err => {
-            console.error("無法讀取 questions.json，請檢查檔案名稱與位置", err);
-            // 備用方案：如果讀取失敗，顯示簡單提示
-            document.getElementById('q-text').innerText = "題庫載入失敗，請檢查網路或檔案位置";
-        });
+    // 1. 初始化
+    const d = new Date();
+    const day = d.getDay();
+    let rem = (day==3||day==0) ? "（今天沒有垃圾車）" : (day==2||day==5) ? "（下午2:30金妹會來）" : "";
+    document.getElementById('greeting').innerText = `麗香早安！今天是 ${d.getMonth()+1}月${d.getDate()}日 星期${'日一二三四五六'[day]} ${rem}`;
 
-    let qIdx = 0, currentStep = 0, exIdx = 0;
-
-    // 2. 初始化
-    // 初始化日期與生活提醒
-    const date = new Date();
-    const day = date.getDay(); // 0:星期日, 1:星期一, ..., 6:星期六
-    let reminder = "";
-
-    // 判斷提醒
-    if (day === 3 || day === 0) {
-        reminder = "（今天沒有垃圾車喔！）";
-    } else if (day === 2 || day === 5) {
-        reminder = "（下午 2:30 金妹會來喔！）";
-    }
-
-    document.getElementById('greeting').innerText = 
-        `麗香早安！今天是 ${date.getMonth()+1}月${date.getDate()}日 星期${'日一二三四五六'[day]} ${reminder}`;
-
+    // 2. 讀取 JSON
+    fetch('questions.json').then(res => res.json()).then(data => allQ = data);
 
     function nextStep(s) {
         document.querySelectorAll('.step').forEach(e => e.classList.remove('active'));
-        currentStep = s;
-        document.getElementById('step'+currentStep).classList.add('active');
-        if(currentStep === 4) startTimer();
+        document.getElementById('step'+s).classList.add('active');
+        step = s;
     }
 
-    function setWeather(t) { alert(t === '熱' ? '多喝水、吹電風扇！' : '加件外套喔！'); nextStep(2); }
-    function setBody(t) { alert(t === '有點胃痛' ? '試著深呼吸放鬆喔！' : '太棒了！'); loadQuiz(); nextStep(3); }
+    function saveEnv(t) { alert(t=='熱'?'記得多喝水、吹電風扇喔！':'記得加件外套喔！'); nextStep(2); }
+    function saveBody(t) { alert(t=='胃痛'?'記得深呼吸放鬆喔！':t=='累'?'休息一下不要勉強喔！':'太棒了，保持心情愉快！'); loadQ(); nextStep(3); }
 
     // 3. 測驗邏輯
-    function loadQuiz() {
-        let q = allQuestions[qIdx];
+    function loadQ() {
+        let q = allQ[Math.floor(Math.random() * allQ.length)];
         document.getElementById('q-text').innerText = q.q;
-        let btnArea = document.getElementById('q-btns');
-        btnArea.innerHTML = '';
+        let area = document.getElementById('q-btns'); area.innerHTML = '';
         q.a.forEach(opt => {
-            let b = document.createElement('button');
-            b.innerText = opt;
-            b.onclick = () => { qIdx++; qIdx < 2 ? loadQuiz() : nextStep(4); };
-            btnArea.appendChild(b);
+            let b = document.createElement('button'); b.innerText = opt;
+            b.onclick = () => { qCount++; qCount < 5 ? loadQ() : nextStep(4), startEx(); };
+            area.appendChild(b);
         });
     }
 
-    // 4. 運動與計時邏輯
-    function startTimer() {
-        document.getElementById('ex-name').innerText = exercises[exIdx];
-        document.getElementById('next-ex-btn').style.display = 'none';
-        let count = 30;
-        document.getElementById('timer').innerText = count;
-        let t = setInterval(() => {
-            count--;
-            document.getElementById('timer').innerText = count;
-            if(count <= 0) { clearInterval(t); document.getElementById('next-ex-btn').style.display = 'block'; }
+    // 4. 運動邏輯
+    function startEx() {
+        document.getElementById('ex-name').innerText = exs[exIdx];
+        document.getElementById('finish-btn').style.display = 'none';
+        let sec = 30, t = setInterval(() => {
+            document.getElementById('timer').innerText = --sec;
+            if(sec <= 0) { clearInterval(t); document.getElementById('finish-btn').style.display = 'block'; }
         }, 1000);
     }
-
-    function nextExercise() {
+    function nextEx() {
         exIdx++;
-        exIdx < exercises.length ? startTimer() : nextStep(5);
+        exIdx < exs.length ? startEx() : nextStep(5);
     }
 </script>
 </body>
